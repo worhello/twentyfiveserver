@@ -2,7 +2,6 @@
 
 const { v4: uuidv4 } = require('uuid');
 
-//let tf = require('./twentyfive/index.js'); // TODO - change this to proper node module
 let tf = require('twentyfive');
 
 const Result = require('./result.js');
