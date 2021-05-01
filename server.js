@@ -15,14 +15,10 @@ var app = express();
 
 const server = http.createServer(app);
 
-var connections = [];
+var connections = new Map();
 
 function getWsForUser(userId) {
-    let i = connections.findIndex(function(conn) { return conn.id === userId });
-    if (i > -1) {
-        return connections[i].connection;
-    }
-    return null;
+    return connections.get(userId);
 }
 
 function handleWebsocketMessage(ws, message) {
@@ -63,12 +59,20 @@ function handleWebsocketMessage(ws, message) {
 
 function handleWsConnection(ws) {
     let userId = uuidv4();
-    connections.push({
-        id: userId,
-        connection: ws
-    });
+    connections.set(userId, ws);
+    console.log("open connection: " + userId);
     ws.on('message', function incoming(message) {
         handleWebsocketMessage(ws, message);
+    });
+    let finishConnectionFunc = function() {
+        console.log("closing connection: " + userId);
+        connections.delete(userId);
+        GamesManager.handlePlayerDrop(userId);
+    };
+    ws.on('close', finishConnectionFunc);
+    ws.on('error', function(error) {
+        // log error?
+        finishConnectionFunc();
     });
 
     ws.send(JSON.stringify({
