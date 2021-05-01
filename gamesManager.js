@@ -71,6 +71,14 @@ function buildPlayerFromPlayerDetails(playerDetails) {
     return p;
 }
 
+function removeGame(gameId) {
+    let gameIndex = ongoingGames.findIndex((g) => g.id == gameId);
+    if (gameIndex != -1) {
+        console.log("removing game with index=" + gameIndex);
+        ongoingGames.splice(gameIndex, 1);
+    }
+}
+
 function createGame(json, sendMessageToClient, callback) {
     var result = new Result.Result();
     checkCreateGameJson(json, result);
@@ -79,8 +87,18 @@ function createGame(json, sendMessageToClient, callback) {
         return;
     }
 
-    let gameMgr = new tf.Game(uuidv4(), json.numberOfPlayers, sendMessageToClient);
+    let gameId = uuidv4();
+
+    let handleStateChangesFunc = function(newState) {
+        console.log("Game " + gameId + " changed state to " + newState);
+        if (newState == tf.GameState.gameFinished) {
+            removeGame(gameId);
+        }
+    }
+
+    let gameMgr = new tf.Game(gameId, json.numberOfPlayers, sendMessageToClient, handleStateChangesFunc);
     ongoingGames.push(gameMgr);
+
     // TODO fix this :)
     let gameUrl = getGameUrl() + "/?gameId=" + gameMgr.id;
     callback({
@@ -89,6 +107,8 @@ function createGame(json, sendMessageToClient, callback) {
          gameId: gameMgr.id,
          gameUrl: gameUrl
     });
+
+    gameMgr.init();
 
     let selfPlayer = buildPlayerFromPlayerDetails(json.playerDetails);
     gameMgr.addPlayer(selfPlayer);
@@ -197,6 +217,28 @@ function playerAction(json, sendMessageToCaller) {
     }
 }
 
+function handlePlayerDrop(playerId) {
+    let gameIndex = ongoingGames.findIndex(function(game) {
+        return game.players.findIndex((p) => p.id == playerId) != -1;
+    });
+    if (gameIndex == -1) {
+        // log?
+        return;
+    }
+
+    let gameMgr = ongoingGames[gameIndex];
+
+    // we want to only remove the player if the game hasn't started yet
+    if (gameMgr.currentState == tf.GameState.waitingForPlayers) {
+        gameMgr.removePlayer({ id: playerId });
+    }
+    else {
+        // There's currently no way to handle missing players
+        // best thing to do is to bail out
+        removeGame(gameMgr.id);
+    }
+}
+
 (function () {
     let gamesManagerExports = {};
     gamesManagerExports.createGame = createGame;
@@ -204,6 +246,7 @@ function playerAction(json, sendMessageToCaller) {
     gamesManagerExports.requestAIs = requestAIs;
     gamesManagerExports.startGame = startGame;
     gamesManagerExports.playerAction = playerAction;
+    gamesManagerExports.handlePlayerDrop = handlePlayerDrop;
     
     module.exports = gamesManagerExports;
 })();
