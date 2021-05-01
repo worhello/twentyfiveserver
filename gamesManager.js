@@ -2,8 +2,8 @@
 
 const { v4: uuidv4 } = require('uuid');
 
-let tfPlayer = require('./twentyfive/player');
-let tf = require('./twentyfive/gameLogic.js');
+//let tf = require('./twentyfive/index.js'); // TODO - change this to proper node module
+let tf = require('twentyfive');
 
 const Result = require('./result.js');
 const jsonValidator = require('./jsonValidator.js');
@@ -67,7 +67,7 @@ function checkPlayerActionJson(json, result) {
 }
 
 function buildPlayerFromPlayerDetails(playerDetails) {
-    var p = new tfPlayer.Player(playerDetails.name);
+    var p = new tf.Player(playerDetails.name);
     p.id = playerDetails.userId;
     return p;
 }
