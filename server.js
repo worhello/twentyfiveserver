@@ -6,14 +6,19 @@ var express = require('express');
 var WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 
+var fs = require('fs'),
+    port = process.env.PORT || 3000,
+    html = fs.readFileSync('index.html');
+
 var GamesManager = require('./gamesManager.js');
-// const result = require('./result.js');
-// const jsonValidator = require('./jsonValidator.js');
 
 var app = express();
-// app.use(express.static('public')); // TODO check if needed
 
-const server = http.createServer(app);
+const server = http.createServer(app, function (req, res) {
+    res.writeHead(200);
+    res.write(html);
+    res.end();
+});
 
 var connections = new Map();
 
@@ -86,4 +91,5 @@ wss.on('connection', function connection(ws) {
     handleWsConnection(ws);
 });
 
-server.listen(8081);
+server.listen(port);
+console.log('Server running at http://127.0.0.1:' + port + '/');
