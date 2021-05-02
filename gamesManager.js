@@ -8,13 +8,13 @@ const Result = require('./result.js');
 const jsonValidator = require('./jsonValidator.js');
 
 function getGameUrl() {
-    return "127.0.0.1:5500"; // TODO hardcode to a well known location when setup
+    return "http://twentyfiveweb.s3-website-eu-west-1.amazonaws.com";
+    // return "127.0.0.1:5500"; // for local testing
 }
 
 var ongoingGames = [];
 function findGameById(id) {
     // TODO change this to use DB/proper persistence
-    // This currently results in a memory leak
     let index = ongoingGames.findIndex((game) => game.id == id);
     if (index >= 0) {
         return ongoingGames[index];
