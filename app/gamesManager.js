@@ -8,8 +8,8 @@ const Result = require('./result.js');
 const jsonValidator = require('./jsonValidator.js');
 
 function getGameUrl() {
-    return "http://twentyfiveweb.s3-website-eu-west-1.amazonaws.com";
-    // return "127.0.0.1:5500"; // for local testing
+    // return "http://twentyfiveweb.s3-website-eu-west-1.amazonaws.com";
+    return "127.0.0.1:5500"; // for local testing
 }
 
 var ongoingGames = [];
