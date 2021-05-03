@@ -10,7 +10,7 @@ var fs = require('fs'),
     port = process.env.PORT || 3000,
     html = fs.readFileSync('index.html');
 
-var GamesManager = require('./gamesManager.js');
+var GamesManager = require('./app/gamesManager.js');
 
 var app = express();
 
