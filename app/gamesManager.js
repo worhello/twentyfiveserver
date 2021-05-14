@@ -15,7 +15,7 @@ function getGameUrl() {
 var ongoingGames = [];
 function findGameById(id) {
     // TODO change this to use DB/proper persistence
-    let index = ongoingGames.findIndex((game) => game.id == id);
+    let index = ongoingGames.findIndex((gameMgr) => gameMgr.game.id == id);
     if (index >= 0) {
         return ongoingGames[index];
     }
@@ -79,7 +79,7 @@ function removeGame(gameId) {
     }
 }
 
-function createGame(json, sendMessageToClient, callback) {
+async function createGame(json, sendMessageToClient, callback) {
     var result = new Result.Result();
     checkCreateGameJson(json, result);
     if (result.success === false) {
@@ -96,25 +96,31 @@ function createGame(json, sendMessageToClient, callback) {
         }
     }
 
-    let gameMgr = new tf.Game(gameId, json.numberOfPlayers, sendMessageToClient, handleStateChangesFunc);
+    let handleGameChangedFunc = function() {
+        // TODO implement
+    }
+
+    let game = new tf.Game(gameId, json.numberOfPlayers, false);
+    let gameMgr = new tf.GameProcessor(game, sendMessageToClient, handleStateChangesFunc, handleGameChangedFunc);
+    gameMgr.nextActionDelayTime = 300;
     ongoingGames.push(gameMgr);
 
     // TODO fix this :)
-    let gameUrl = getGameUrl() + "/?gameId=" + gameMgr.id;
+    let gameUrl = getGameUrl() + "/?gameId=" + gameMgr.game.id;
     callback({
          type: "createGameAck", 
          success: true, 
-         gameId: gameMgr.id,
+         gameId: gameMgr.game.id,
          gameUrl: gameUrl
     });
 
-    gameMgr.init();
+    await gameMgr.init();
 
     let selfPlayer = buildPlayerFromPlayerDetails(json.playerDetails);
-    gameMgr.addPlayer(selfPlayer);
+    await gameMgr.addPlayer(selfPlayer);
 }
 
-function joinGame(json, callback) {
+async function joinGame(json, callback) {
     var result = new Result.Result();
     checkJoinGameJson(json, result);
     if (result.success === false) {
@@ -129,19 +135,19 @@ function joinGame(json, callback) {
         return;
     }
 
-    let gameUrl = getGameUrl() + "/?gameId=" + gameMgr.id;
+    let gameUrl = getGameUrl() + "/?gameId=" + gameMgr.game.id;
 
     callback({
         type: "joinGameAck", 
         success: true, 
-        gameId: gameMgr.id,
+        gameId: gameMgr.game.id,
         gameUrl: gameUrl
    });
     let player = buildPlayerFromPlayerDetails(json.playerDetails);
-    gameMgr.addPlayer(player);
+    await gameMgr.addPlayer(player);
 }
 
-function requestAIs(json, sendMessageToCaller) {
+async function requestAIs(json, sendMessageToCaller) {
     var result = new Result.Result();
     checkRequestAIsJson(json, result);
     if (result.success === false) {
@@ -156,15 +162,15 @@ function requestAIs(json, sendMessageToCaller) {
         return;
     }
 
-    if (gameMgr.players.length !== gameMgr.numberOfPlayers) {
-        gameMgr.fillWithAis();
+    if (gameMgr.needsMorePlayers()) {
+        await gameMgr.fillWithAis();
     }
     else {
         sendMessageToCaller({ success: false, errorMessage: "Enough players in the game already" });
     }
 }
 
-function startGame(json, sendMessageToCaller) {
+async function startGame(json, sendMessageToCaller) {
     var result = new Result.Result();
     checkStartGameJson(json, result);
     if (result.success === false) {
@@ -184,10 +190,10 @@ function startGame(json, sendMessageToCaller) {
         return;
     }
 
-    gameMgr.start();
+    await gameMgr.start();
 }
 
-function playerAction(json, sendMessageToCaller) {
+async function playerAction(json, sendMessageToCaller) {
     var result = new Result.Result();
     checkPlayerActionJson(json, result);
     if (result.success === false) {
@@ -204,22 +210,22 @@ function playerAction(json, sendMessageToCaller) {
 
     let playerActionType = json.playerActionType;
     if (playerActionType === "playCard") {
-        gameMgr.playCardWithId(json.userId, json.cardDetails)
+        await gameMgr.playCardWithId(json.userId, json.cardDetails)
     }
     else if (playerActionType === "robTrumpCard") {
-        gameMgr.robTrumpCard(json.userId, json.droppedCardDetails);
+        await gameMgr.robTrumpCard(json.userId, json.droppedCardDetails);
     }
     else if (playerActionType === "skipRobTrumpCard") {
-        gameMgr.skipRobTrumpCard(json.userId);
+        await gameMgr.skipRobTrumpCard(json.userId);
     }
     else if (playerActionType === "startNextRound") {
-        gameMgr.markPlayerReadyForNextRound(json.userId);
+        await gameMgr.markPlayerReadyForNextRound(json.userId);
     }
 }
 
-function handlePlayerDrop(playerId) {
-    let gameIndex = ongoingGames.findIndex(function(game) {
-        return game.players.findIndex((p) => p.id == playerId) != -1;
+async function handlePlayerDrop(playerId) {
+    let gameIndex = ongoingGames.findIndex(function(gameMgr) {
+        return gameMgr.game.players.findIndex((p) => p.id == playerId) != -1;
     });
     if (gameIndex == -1) {
         // log?
@@ -229,13 +235,13 @@ function handlePlayerDrop(playerId) {
     let gameMgr = ongoingGames[gameIndex];
 
     // we want to only remove the player if the game hasn't started yet
-    if (gameMgr.currentState == tf.GameState.waitingForPlayers) {
-        gameMgr.removePlayer({ id: playerId });
+    if (gameMgr.game.currentState == tf.GameState.waitingForPlayers) {
+        await gameMgr.removePlayer({ id: playerId });
     }
     else {
         // There's currently no way to handle missing players
         // best thing to do is to bail out
-        removeGame(gameMgr.id);
+        removeGame(gameMgr.game.id);
     }
 }
 
