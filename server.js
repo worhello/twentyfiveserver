@@ -26,11 +26,11 @@ function getWsForUser(userId) {
     return connections.get(userId);
 }
 
-function handleWebsocketMessage(ws, message) {
-    //console.log('received: %s', message);
+async function handleWebsocketMessage(ws, message) {
+    // console.log('received: %s', message);
     let sendJsonResponse = function(w, result) {
         let json = JSON.stringify(result);
-        //console.log("Sending: " + json);
+        // console.log("Sending: " + json);
         w.send(json);
     }
     let sendJsonResponseToClient = function(userId, result) {
@@ -46,20 +46,46 @@ function handleWebsocketMessage(ws, message) {
     // TODO validate
     let json = JSON.parse(message);
     if (json.type === "createGame") {
-        GamesManager.createGame(json, sendJsonResponseToClient, sendJsonResponseToCaller);
+        await GamesManager.createGame(json, sendJsonResponseToClient, sendJsonResponseToCaller);
     }
     else if (json.type === "joinGame") {
-        GamesManager.joinGame(json, sendJsonResponseToCaller);
+        await GamesManager.joinGame(json, sendJsonResponseToCaller);
     }
     else if (json.type === "requestAIs") {
-        GamesManager.requestAIs(json, sendJsonResponseToCaller);
+        await GamesManager.requestAIs(json, sendJsonResponseToCaller);
     }
     else if (json.type === "startGame") {
-        GamesManager.startGame(json, sendJsonResponseToCaller);
+        await GamesManager.startGame(json, sendJsonResponseToCaller);
     }
     else if (json.type === "playerAction") {
-        GamesManager.playerAction(json, sendJsonResponseToCaller);
+        await GamesManager.playerAction(json, sendJsonResponseToCaller);
     }
+}
+
+var eventsQueue = [];
+function queueAppend(ws, message) {
+    eventsQueue.push({ ws, message });
+    tryRunNext();
+}
+
+let active = false;
+function tryRunNext() {
+    if (active || eventsQueue.length == 0) {
+        return;
+    }
+
+    const { ws, message } = eventsQueue.shift();
+    active = true;
+    handleWebsocketMessage(ws, message)
+    .then(() => {
+        active = false;
+        tryRunNext();
+    })
+    .catch((err) => {
+        // handle errors
+        active = false;
+        tryRunNext();
+    });
 }
 
 function handleWsConnection(ws) {
@@ -67,7 +93,7 @@ function handleWsConnection(ws) {
     connections.set(userId, ws);
     console.log("open connection: " + userId);
     ws.on('message', function incoming(message) {
-        handleWebsocketMessage(ws, message);
+        queueAppend(ws, message);
     });
     let finishConnectionFunc = function() {
         console.log("closing connection: " + userId);
@@ -75,9 +101,8 @@ function handleWsConnection(ws) {
         GamesManager.handlePlayerDrop(userId);
     };
     ws.on('close', finishConnectionFunc);
-    ws.on('error', function(error) {
-        // log error?
-        finishConnectionFunc();
+    ws.on('error', async function(error) {
+        await finishConnectionFunc();
     });
 
     ws.send(JSON.stringify({
