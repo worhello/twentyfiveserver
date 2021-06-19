@@ -1,11 +1,10 @@
 "use strict";
 
 const { v4: uuidv4 } = require('uuid');
+const tf = require('twentyfive');
 
-let tf = require('twentyfive');
-
-const Result = require('./result.js');
-const jsonValidator = require('./jsonValidator.js');
+const Result = require('../helpers/result');
+const jsonValidator = require('../helpers/jsonValidator.js');
 
 function getGameUrl() {
     return "http://twentyfivecardgame.com";
