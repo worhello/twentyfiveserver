@@ -12,6 +12,7 @@ function getWsForUser(userId) {
 function handleWebsocketMessage(ws, message) {
     // console.log('received: %s', message);
     let sendJsonResponseToCaller = function(result) {
+        // console.log("Sending: " + json);
         ws.send(JSON.stringify(result));
     }
 
