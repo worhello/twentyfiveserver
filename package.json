@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.17.1",
-    "twentyfive": "0.3.6",
+    "twentyfive": "latest",
     "uuid": "^8.3.2",
     "ws": "^7.5.0"
   }

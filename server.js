@@ -20,4 +20,4 @@ const server = http.createServer(app, function (req, res) {
 socket.init(server);
 
 server.listen(port);
-console.log('Server running at http://127.0.0.1:' + port + '/');
+console.log('Server running, port: ' + port);
