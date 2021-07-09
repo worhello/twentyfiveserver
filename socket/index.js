@@ -6,8 +6,8 @@ const GameStateMachineSocketHandler = require('./gameStateMachineSocketHandler')
 
 var wss;
 
-// disabling this short term
-const useGameStateMachine = false;
+// enabling this - will remove whole check soon
+const useGameStateMachine = true;
 
 function handleWssServerConnection(ws) {
     if (useGameStateMachine) {
