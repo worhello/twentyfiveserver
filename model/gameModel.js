@@ -1,10 +1,13 @@
 "use strict";
 
+const mongoDbAdapter = require('./mongoDbAdapter');
+
 // using in memory array for now
 // long term we should move to MongoDB
 var ongoingGames = new Map();
 
 function storeNewGame(gameId, game) {
+    mongoDbAdapter.storeNewGame(gameId, game);
     console.log("storing new game, id= " + gameId);
     if (!ongoingGames.has(gameId)) {
         ongoingGames.set(gameId, game);
@@ -12,6 +15,7 @@ function storeNewGame(gameId, game) {
 }
 
 function findGameWithPlayerId(playerId) {
+    mongoDbAdapter.findGameWithPlayerId(playerId);
     const iter = ongoingGames.values();
     let result = iter.next();
     while (!result.done) {
@@ -27,6 +31,7 @@ function findGameWithPlayerId(playerId) {
 }
 
 function getGame(gameId) {
+    mongoDbAdapter.getGame(gameId);
     let game = ongoingGames.get(gameId);
     if (game) {
         return game;
@@ -36,6 +41,7 @@ function getGame(gameId) {
 }
 
 function updateGame(gameId, game) {
+    mongoDbAdapter.updateGame(gameId, game);
     if (ongoingGames.has(gameId)) {
         ongoingGames.set(gameId, game);
     }
@@ -45,6 +51,7 @@ function updateGame(gameId, game) {
 }
 
 function deleteGame(gameId) {
+    mongoDbAdapter.deleteGame(gameId);
     console.log("deleting game, id= " + gameId);
     ongoingGames.delete(gameId);
 }
