@@ -4,8 +4,8 @@ const tf = require('twentyfive');
 const gameModel = require('../model/gameModel');
 const notificationHelper = require('./notificationHelper');
 
-function updateGameInModel(game) {
-    gameModel.updateGame(game.id, game);
+async function updateGameInModel(game) {
+    await gameModel.updateGame(game.id, game);
 }
 
 function updateGameState(game) {
@@ -14,8 +14,10 @@ function updateGameState(game) {
 }
 
 function handleUpdatedGameState(game) {
-    updateGameInModel(game);
+    updateGameInModel(game).then(() => handleUpdateGameStateAfterPersistence(game));
+}
 
+function handleUpdateGameStateAfterPersistence(game) {
     if (game.currentState2 == tf.GameState2.waitingForPlayers) {
         handleWaitingForPlayer(game);
     }
@@ -113,7 +115,9 @@ function handleRoundFinished(game) {
 
 function handleGameFinished(game) {
     notificationHelper.notifyAllRoundFinished(game, "gameFinished");
-    gameModel.deleteGame(game.id);
+    gameModel.deleteGame(game.id).then(() => {
+        console.log("Deleted game: ", game.id);
+    });
 }
 
 function initGame(game) {

@@ -6,16 +6,16 @@ const mongoDbAdapter = require('./mongoDbAdapter');
 // long term we should move to MongoDB
 var ongoingGames = new Map();
 
-function storeNewGame(gameId, game) {
-    mongoDbAdapter.storeNewGame(gameId, game);
+async function storeNewGame(gameId, game) {
+    // await mongoDbAdapter.storeNewGame(gameId, game); // TODO uncomment when wiring up mongodb
     console.log("storing new game, id= " + gameId);
     if (!ongoingGames.has(gameId)) {
         ongoingGames.set(gameId, game);
     }
 }
 
-function findGameWithPlayerId(playerId) {
-    mongoDbAdapter.findGameWithPlayerId(playerId);
+async function findGameWithPlayerId(playerId) {
+    // return await mongoDbAdapter.findGameWithPlayerId(playerId); // TODO uncomment when wiring up mongodb
     const iter = ongoingGames.values();
     let result = iter.next();
     while (!result.done) {
@@ -30,8 +30,8 @@ function findGameWithPlayerId(playerId) {
     return null;
 }
 
-function getGame(gameId) {
-    mongoDbAdapter.getGame(gameId);
+async function getGame(gameId) {
+    // return await mongoDbAdapter.getGame(gameId); // TODO uncomment when wiring up mongodb
     let game = ongoingGames.get(gameId);
     if (game) {
         return game;
@@ -40,8 +40,8 @@ function getGame(gameId) {
     return null;
 }
 
-function updateGame(gameId, game) {
-    mongoDbAdapter.updateGame(gameId, game);
+async function updateGame(gameId, game) {
+    // await mongoDbAdapter.updateGame(gameId, game); // TODO uncomment when wiring up mongodb
     if (ongoingGames.has(gameId)) {
         ongoingGames.set(gameId, game);
     }
@@ -50,8 +50,8 @@ function updateGame(gameId, game) {
     }
 }
 
-function deleteGame(gameId) {
-    mongoDbAdapter.deleteGame(gameId);
+async function deleteGame(gameId) {
+    // await mongoDbAdapter.deleteGame(gameId); // TODO uncomment when wiring up mongodb
     console.log("deleting game, id= " + gameId);
     ongoingGames.delete(gameId);
 }
