@@ -44,14 +44,18 @@ function createGame(json, notifyCallerFunc) {
 
     let gameId = uuidv4();
     let game = new tf.Game(gameId, json.numberOfPlayers, false);
-    gameModel.storeNewGame(gameId, game);
+    gameModel.storeNewGame(gameId, game).then(() => {
+        notifyConnected(game.id, "createGameAck", notifyCallerFunc);
 
-    notifyConnected(game.id, "createGameAck", notifyCallerFunc);
+        gameStateMachineOperator.initGame(game);
 
-    gameStateMachineOperator.initGame(game);
+        let selfPlayer = buildPlayerFromPlayerDetails(json.playerDetails);
+        addPlayer(game, selfPlayer, notifyCallerFunc);
+    }, handleModelOperationFailure);
+}
 
-    let selfPlayer = buildPlayerFromPlayerDetails(json.playerDetails);
-    addPlayer(game, selfPlayer, notifyCallerFunc);
+function handleModelOperationFailure(failure) {
+    console.log("Failed in Model operation, reason: ", failure);
 }
 
 function joinGame(json, notifyCallerFunc) {
@@ -63,15 +67,16 @@ function joinGame(json, notifyCallerFunc) {
     }
 
     let gameId = json.gameId;
-    let game = gameModel.getGame(gameId);
-    if (!game) {
-        notifyCallerFunc({ success: false, errorMessage: "no game with id " + gameId });
-        return;
-    }
-
-    notifyConnected(game.id, "joinGameAck", notifyCallerFunc);
-    let player = buildPlayerFromPlayerDetails(json.playerDetails);
-    addPlayer(game, player, notifyCallerFunc);
+    gameModel.getGame(gameId).then((game) => {
+        if (!game) {
+            notifyCallerFunc({ success: false, errorMessage: "no game with id " + gameId });
+            return;
+        }
+    
+        notifyConnected(game.id, "joinGameAck", notifyCallerFunc);
+        let player = buildPlayerFromPlayerDetails(json.playerDetails);
+        addPlayer(game, player, notifyCallerFunc);
+    }, handleModelOperationFailure);
 }
 
 function requestAIs(json, sendMessageToCaller) {
@@ -83,13 +88,14 @@ function requestAIs(json, sendMessageToCaller) {
     }
 
     let gameId = json.gameId;
-    let game = gameModel.getGame(gameId);
-    if (!game) {
-        sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
-        return;
-    }
+    gameModel.getGame(gameId).then((game) => {
+        if (!game) {
+            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+            return;
+        }
 
-    gameStateMachineOperator.fillWithAis(game);
+        gameStateMachineOperator.fillWithAis(game);
+    }, handleModelOperationFailure);
 }
 
 function startGame(json, sendMessageToCaller) {
@@ -101,13 +107,14 @@ function startGame(json, sendMessageToCaller) {
     }
 
     let gameId = json.gameId;
-    let game = gameModel.getGame(gameId);
-    if (!game) {
-        sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
-        return;
-    }
-
-    gameStateMachineOperator.startGame(game);
+    gameModel.getGame(gameId).then((game) => {
+        if (!game) {
+            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+            return;
+        }
+    
+        gameStateMachineOperator.startGame(game);
+    }, handleModelOperationFailure);
 }
 
 function playerAction(json, sendMessageToCaller) {
@@ -119,44 +126,46 @@ function playerAction(json, sendMessageToCaller) {
     }
 
     let gameId = json.gameId;
-    let game = gameModel.getGame(gameId);
-    if (!game) {
-        sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
-        return;
-    }
-
-    let playerActionType = json.playerActionType;
-    if (playerActionType === "playCard") {
-        gameStateMachineOperator.playCardWithId(game, json.userId, json.cardDetails)
-    }
-    else if (playerActionType === "robTrumpCard") {
-        gameStateMachineOperator.robTrumpCard(game, json.userId, json.droppedCardDetails);
-    }
-    else if (playerActionType === "skipRobTrumpCard") {
-        gameStateMachineOperator.skipRobTrumpCard(game, json.userId);
-    }
-    else if (playerActionType === "startNextRound") {
-        gameStateMachineOperator.markPlayerReadyForNextRound(game, json.userId);
-    }
+    gameModel.getGame(gameId).then((game) => {
+        if (!game) {
+            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+            return;
+        }
+    
+        let playerActionType = json.playerActionType;
+        if (playerActionType === "playCard") {
+            gameStateMachineOperator.playCardWithId(game, json.userId, json.cardDetails)
+        }
+        else if (playerActionType === "robTrumpCard") {
+            gameStateMachineOperator.robTrumpCard(game, json.userId, json.droppedCardDetails);
+        }
+        else if (playerActionType === "skipRobTrumpCard") {
+            gameStateMachineOperator.skipRobTrumpCard(game, json.userId);
+        }
+        else if (playerActionType === "startNextRound") {
+            gameStateMachineOperator.markPlayerReadyForNextRound(game, json.userId);
+        }
+    }, handleModelOperationFailure);
 }
 
 function handlePlayerDrop(playerId) {
-    let game = gameModel.findGameWithPlayerId(playerId);
-    if (!game) {
-        //log?
-        return;
-    }
-
-    // we want to only remove the player if the game hasn't started yet
-    if (game.currentState == tf.GameState.waitingForPlayers || game.currentState == tf.GameState.readyToPlay) {
-        gameStateMachineOperator.removePlayer(game, playerId);
-    }
-    else {
-        // There's currently no way to handle missing players
-        // best thing to do is to bail out
-        gameModel.deleteGame(game.id);
-        // notify?
-    }
+    gameModel.findGameWithPlayerId(playerId).then((game) => {
+        if (!game) {
+            //log?
+            return;
+        }
+    
+        // we want to only remove the player if the game hasn't started yet
+        if (game.currentState == tf.GameState.waitingForPlayers || game.currentState == tf.GameState.readyToPlay) {
+            gameStateMachineOperator.removePlayer(game, playerId);
+        }
+        else {
+            // There's currently no way to handle missing players
+            // best thing to do is to bail out
+            gameModel.deleteGame(game.id);
+            // notify?
+        }
+    }, handleModelOperationFailure);
 }
 
 (function () {
