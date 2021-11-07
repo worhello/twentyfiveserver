@@ -43,7 +43,7 @@ function createGame(json, notifyCallerFunc) {
     }
 
     let gameId = uuidv4();
-    let game = new tf.Game(gameId, json.numberOfPlayers, false);
+    let game = new tf.Game(gameId, json.numberOfPlayers); // TODO add support for setting rules from client
     gameModel.storeNewGame(gameId, game).then(() => {
         notifyConnected(game.id, "createGameAck", notifyCallerFunc);
 
