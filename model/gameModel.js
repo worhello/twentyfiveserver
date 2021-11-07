@@ -1,59 +1,53 @@
 "use strict";
 
-const mongoDbAdapter = require('./mongoDbAdapter');
+const databaseAdapter = require('./databaseAdapter');
+const inMemoryDatabase = require('./inMemoryDatabase');
 
-// using in memory array for now
-// long term we should move to MongoDB
-var ongoingGames = new Map();
+const useRealDatabase = false; // TODO remove this
 
 async function storeNewGame(gameId, game) {
-    // await mongoDbAdapter.storeNewGame(gameId, game); // TODO uncomment when wiring up mongodb
-    console.log("storing new game, id= " + gameId);
-    if (!ongoingGames.has(gameId)) {
-        ongoingGames.set(gameId, game);
+    if (useRealDatabase) {
+        await databaseAdapter.storeNewGame(gameId, game);
+    }
+    else {
+        inMemoryDatabase.storeNewGame(gameId, game);
     }
 }
 
 async function findGameWithPlayerId(playerId) {
-    // return await mongoDbAdapter.findGameWithPlayerId(playerId); // TODO uncomment when wiring up mongodb
-    const iter = ongoingGames.values();
-    let result = iter.next();
-    while (!result.done) {
-        let game = result.value;
-        if (game.players.findIndex((p) => p.id == playerId) > -1) {
-            return game;
-        }
-        else {
-            result = iter.next();
-        }
+    if (useRealDatabase) {
+        return await databaseAdapter.findGameWithPlayerId(playerId);
     }
-    return null;
+    else {
+        return inMemoryDatabase.findGameWithPlayerId(playerId);
+    }
 }
 
 async function getGame(gameId) {
-    // return await mongoDbAdapter.getGame(gameId); // TODO uncomment when wiring up mongodb
-    let game = ongoingGames.get(gameId);
-    if (game) {
-        return game;
+    if (useRealDatabase) {
+        return await databaseAdapter.getGame(gameId);
     }
-    console.log("Tried to get a non-existent game, id= " + gameId);
-    return null;
+    else {
+        return inMemoryDatabase.getGame(gameId);
+    }
 }
 
 async function updateGame(gameId, game) {
-    // await mongoDbAdapter.updateGame(gameId, game); // TODO uncomment when wiring up mongodb
-    if (ongoingGames.has(gameId)) {
-        ongoingGames.set(gameId, game);
+    if (useRealDatabase) {
+        await databaseAdapter.updateGame(gameId, game);
     }
     else {
-        console.log("Tried to update a game that doesn't exist, id= " + gameId);
+        inMemoryDatabase.updateGame(gameId, game);
     }
 }
 
 async function deleteGame(gameId) {
-    // await mongoDbAdapter.deleteGame(gameId); // TODO uncomment when wiring up mongodb
-    console.log("deleting game, id= " + gameId);
-    ongoingGames.delete(gameId);
+    if (useRealDatabase) {
+        await databaseAdapter.deleteGame(gameId);
+    }
+    else {
+        inMemoryDatabase.deleteGame(gameId);
+    }
 }
 
 (function () {
