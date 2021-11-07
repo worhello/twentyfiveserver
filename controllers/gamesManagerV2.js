@@ -156,7 +156,7 @@ function handlePlayerDrop(playerId) {
         }
     
         // we want to only remove the player if the game hasn't started yet
-        if (game.currentState == tf.GameState.waitingForPlayers || game.currentState == tf.GameState.readyToPlay) {
+        if (game.currentState == tf.GameState2.waitingForPlayers || game.currentState == tf.GameState2.readyToPlay) {
             gameStateMachineOperator.removePlayer(game, playerId);
         }
         else {
