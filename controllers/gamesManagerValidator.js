@@ -12,13 +12,17 @@ function checkPlayerDetails(playerDetails, result) {
 }
 
 function checkCreateGameJson(json, result) {
-    validateJson(json, ["type", "numberOfPlayers", "playerDetails"], "request", result);
-    checkPlayerDetails(json.playerDetails, result);
+    validateJson(json, ["type", "numberOfPlayers", "playerDetails", "gameRules"], "request", result);
+    if (result.success == true) {
+        checkPlayerDetails(json.playerDetails, result);
+    }
 }
 
 function checkJoinGameJson(json, result) {
     validateJson(json, ["type", "gameId", "playerDetails"], "request", result);
-    checkPlayerDetails(json.playerDetails, result);
+    if (result.success == true) {
+        checkPlayerDetails(json.playerDetails, result);
+    }
 }
 
 function checkRequestAIsJson(json, result) {
