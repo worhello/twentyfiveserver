@@ -34,16 +34,46 @@ function addPlayer(game, player, notifyCallerFunc) {
     gameStateMachineOperator.addPlayer(game, player);
 }
 
-function createGame(json, notifyCallerFunc) {
+function buildErrorObject(errorMessage) {
+    console.log("Building error object: " + errorMessage);
+    return {
+        type: "errorMessage",
+        success: false,
+        errorMessage: errorMessage
+    };
+}
+
+function validate(json, validatorFunc, notifyCallerFunc) {
     var result = new Result.Result();
-    gamesManagerValidator.checkCreateGameJson(json, result);
+    validatorFunc(json, result);
     if (result.success == false) {
-        notifyCallerFunc({ success: result.success, errorMessage: result.errorMessage });
+        notifyCallerFunc(buildErrorObject(result.errorMessage));
+    }
+    return result.success;
+}
+
+function validateGame(gameId, game, notifyCallerFunc) {
+    if (!game) {
+        notifyCallerFunc(buildErrorObject("no game with id " + gameId));
+        return false;
+    }
+    return true;
+}
+
+function createGame(json, notifyCallerFunc) {
+    if (!validate(json, gamesManagerValidator.checkCreateGameJson, notifyCallerFunc)) {
         return;
     }
 
     let gameId = uuidv4();
-    let game = new tf.Game(gameId, json.numberOfPlayers); // TODO add support for setting rules from client
+    var game;
+    try {
+        game = new tf.Game(gameId, json.numberOfPlayers); // TODO add support for setting rules from client
+    } catch (err) {
+        notifyCallerFunc(buildErrorObject("Failed to create game with error message: " + err));
+        return;
+    }
+
     gameModel.storeNewGame(gameId, game).then(() => {
         notifyConnected(game.id, "createGameAck", notifyCallerFunc);
 
@@ -51,84 +81,71 @@ function createGame(json, notifyCallerFunc) {
 
         let selfPlayer = buildPlayerFromPlayerDetails(json.playerDetails);
         addPlayer(game, selfPlayer, notifyCallerFunc);
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(notifyCallerFunc, failure));
 }
 
-function handleModelOperationFailure(failure) {
-    console.log("Failed in Model operation, reason: ", failure);
+function handleModelOperationFailure(notifyCallerFunc, failure) {
+    let errorObject = buildErrorObject("Failed in Model operation, reason: " + failure);
+    if (notifyCallerFunc) {
+        notifyCallerFunc(errorObject);
+    }
 }
 
 function joinGame(json, notifyCallerFunc) {
-    var result = new Result.Result();
-    gamesManagerValidator.checkJoinGameJson(json, result);
-    if (result.success == false) {
-        notifyCallerFunc({ success: result.success, errorMessage: result.errorMessage });
+    if (!validate(json, gamesManagerValidator.checkJoinGameJson, notifyCallerFunc)) {
         return;
     }
 
     let gameId = json.gameId;
     gameModel.getGame(gameId).then((game) => {
-        if (!game) {
-            notifyCallerFunc({ success: false, errorMessage: "no game with id " + gameId });
+        if (!validateGame(gameId, game, notifyCallerFunc)) {
             return;
         }
     
         notifyConnected(game.id, "joinGameAck", notifyCallerFunc);
         let player = buildPlayerFromPlayerDetails(json.playerDetails);
         addPlayer(game, player, notifyCallerFunc);
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(notifyCallerFunc, failure));
 }
 
 function requestAIs(json, sendMessageToCaller) {
-    var result = new Result.Result();
-    gamesManagerValidator.checkRequestAIsJson(json, result);
-    if (result.success == false) {
-        sendMessageToCaller({ success: result.success, errorMessage: result.errorMessage });
+    if (!validate(json, gamesManagerValidator.checkRequestAIsJson, sendMessageToCaller)) {
         return;
     }
 
     let gameId = json.gameId;
     gameModel.getGame(gameId).then((game) => {
-        if (!game) {
-            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+        if (!validateGame(gameId, game, sendMessageToCaller)) {
             return;
         }
 
         gameStateMachineOperator.fillWithAis(game);
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(sendMessageToCaller, failure));
 }
 
 function startGame(json, sendMessageToCaller) {
-    var result = new Result.Result();
-    gamesManagerValidator.checkStartGameJson(json, result);
-    if (result.success == false) {
-        sendMessageToCaller({ success: result.success, errorMessage: result.errorMessage });
+    if (!validate(json, gamesManagerValidator.checkStartGameJson, sendMessageToCaller)) {
         return;
     }
 
     let gameId = json.gameId;
     gameModel.getGame(gameId).then((game) => {
-        if (!game) {
-            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+        if (!validateGame(gameId, game, sendMessageToCaller)) {
             return;
         }
     
         gameStateMachineOperator.startGame(game);
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(sendMessageToCaller, failure));
 }
 
 function playerAction(json, sendMessageToCaller) {
-    var result = new Result.Result();
-    gamesManagerValidator.checkPlayerActionJson(json, result);
-    if (result.success == false) {
-        sendMessageToCaller({ success: result.success, errorMessage: result.errorMessage });
+    if (!validate(json, gamesManagerValidator.checkPlayerActionJson, sendMessageToCaller)) {
         return;
     }
 
     let gameId = json.gameId;
     gameModel.getGame(gameId).then((game) => {
-        if (!game) {
-            sendMessageToCaller({ success: false, errorMessage: "no game with id " + gameId });
+        if (!validateGame(gameId, game, sendMessageToCaller)) {
             return;
         }
     
@@ -145,7 +162,7 @@ function playerAction(json, sendMessageToCaller) {
         else if (playerActionType === "startNextRound") {
             gameStateMachineOperator.markPlayerReadyForNextRound(game, json.userId);
         }
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(sendMessageToCaller, failure));
 }
 
 function handlePlayerDrop(playerId) {
@@ -165,7 +182,7 @@ function handlePlayerDrop(playerId) {
             gameModel.deleteGame(game.id);
             // notify?
         }
-    }, handleModelOperationFailure);
+    }, (failure) => handleModelOperationFailure(null, failure));
 }
 
 (function () {
