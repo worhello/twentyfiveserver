@@ -68,7 +68,7 @@ function createGame(json, notifyCallerFunc) {
     let gameId = uuidv4();
     var game;
     try {
-        game = new tf.Game(gameId, json.numberOfPlayers); // TODO add support for setting rules from client
+        game = new tf.Game(gameId, json.numberOfPlayers, json.gameRules);
     } catch (err) {
         notifyCallerFunc(buildErrorObject("Failed to create game with error message: " + err));
         return;

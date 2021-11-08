@@ -1,7 +1,7 @@
 "use strict";
 
 function getMissingFieldsErrorString(superset, subset) {
-    let invalidKeys = superset.filter(e => subset.indexOf(e) === -1);
+    let invalidKeys = superset.filter(e => subset.indexOf(e) == -1);
     var msg = "";
     invalidKeys.forEach(function(e) {
         msg += '\"';
