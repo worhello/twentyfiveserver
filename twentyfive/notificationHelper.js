@@ -36,7 +36,8 @@ function notifyAllGameInitialState(game) {
             userId: "",
             cards: []
         },
-        players: game.players
+        players: game.players,
+        teams: game.teams
     }
     for (var i = 0; i < game.players.length; i++) {
         let p = game.players[i];
@@ -118,7 +119,8 @@ function notifyAllRoundFinished(game, eventType) {
     let data = {
         type: eventType,
         gameId: game.id,
-        orderedPlayers: game.endOfHandInfo.orderedPlayers
+        orderedPlayers: game.endOfHandInfo.orderedPlayers,
+        teams: game.teams
     }
     notifyAll(game.id, data);
 }
