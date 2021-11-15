@@ -1,6 +1,7 @@
 "use strict";
 
 const jsonValidator = require('../helpers/jsonValidator.js');
+const tf = require('twentyfive');
 
 function validateJson(json, validFields, objectName, result) {
     let validator = jsonValidator.buildValidatorWithJson(objectName, json, validFields);
@@ -9,6 +10,11 @@ function validateJson(json, validFields, objectName, result) {
 
 function checkPlayerDetails(playerDetails, result) {
     validateJson(playerDetails, ["name", "userId"], "playerDetails", result);
+    if (!tf.Helpers.isValidName(playerDetails.name)) {
+        result.success = false;
+        result.errorMessage = "A player has an invalid name. Names must be >3, <=20 characters, and can only contain alphanumeric characters";
+        return;
+    }
 }
 
 function checkCreateGameJson(json, result) {
