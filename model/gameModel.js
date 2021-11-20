@@ -3,7 +3,7 @@
 const databaseAdapter = require('./databaseAdapter');
 const inMemoryDatabase = require('./inMemoryDatabase');
 
-const useRealDatabase = false; // TODO remove this
+const useRealDatabase = true;
 
 async function storeNewGame(gameId, game) {
     if (useRealDatabase) {
