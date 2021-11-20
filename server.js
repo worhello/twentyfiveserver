@@ -17,6 +17,12 @@ const server = http.createServer(app, function (req, res) {
     res.end();
 });
 
+app.get('/', (req, res) => {
+    res.writeHead(200);
+    res.write(html);
+    res.end();
+});
+
 socket.init(server);
 
 server.listen(port);
