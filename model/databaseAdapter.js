@@ -182,14 +182,37 @@ async function updateGame(gameId, game) {
     }
 }
 
-async function deleteGame(gameId) {
-    console.log("DatabaseAdapter: deleting game, id= " + gameId);
+async function deletePlayerId(playerId) {
+    var params = {
+        TableName: playersToGamesTableName,
+        Key:{
+            "playerId": playerId
+        }
+    };
+
+    try {
+        await docClient.delete(params).promise();
+    } catch (err) {
+        console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+    }
+}
+
+async function deleteGame(game) {
+    console.log("DatabaseAdapter: deleting game, id= " + game.id);
+
+    var promises = [];
+    for (let playerId of game.players.map(p => p.id)) {
+        promises.push(deletePlayerId(playerId));
+    }
+
+    for (let p of promises) {
+        await p;
+    }
 
     var params = {
-        TableName:table,
         TableName: gamesTableName,
         Key:{
-            "gameId": gameId
+            "gameId": game.id
         }
     };
 

@@ -42,9 +42,9 @@ function updateGame(gameId, game) {
     }
 }
 
-function deleteGame(gameId) {
-    console.log("deleting game, id= " + gameId);
-    ongoingGames.delete(gameId);
+function deleteGame(game) {
+    console.log("deleting game, id= " + game.id);
+    ongoingGames.delete(game.id);
 }
 
 (function () {

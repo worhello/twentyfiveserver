@@ -115,7 +115,7 @@ function handleRoundFinished(game) {
 
 function handleGameFinished(game) {
     notificationHelper.notifyAllRoundFinished(game, "gameFinished");
-    gameModel.deleteGame(game.id).then(() => {
+    gameModel.deleteGame(game).then(() => {
         console.log("Deleted game: ", game.id);
     });
 }

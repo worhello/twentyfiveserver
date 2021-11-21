@@ -41,12 +41,12 @@ async function updateGame(gameId, game) {
     }
 }
 
-async function deleteGame(gameId) {
+async function deleteGame(game) {
     if (useRealDatabase) {
-        await databaseAdapter.deleteGame(gameId);
+        await databaseAdapter.deleteGame(game);
     }
     else {
-        inMemoryDatabase.deleteGame(gameId);
+        inMemoryDatabase.deleteGame(game);
     }
 }
 
