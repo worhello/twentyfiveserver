@@ -179,7 +179,7 @@ function handlePlayerDrop(playerId) {
         else {
             // There's currently no way to handle missing players
             // best thing to do is to bail out
-            gameModel.deleteGame(game.id);
+            gameModel.deleteGame(game);
             // notify?
         }
     }, (failure) => handleModelOperationFailure(null, failure));

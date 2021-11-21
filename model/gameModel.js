@@ -3,7 +3,7 @@
 const databaseAdapter = require('./databaseAdapter');
 const inMemoryDatabase = require('./inMemoryDatabase');
 
-const useRealDatabase = false; // TODO remove this
+const useRealDatabase = true;
 
 async function storeNewGame(gameId, game) {
     if (useRealDatabase) {
@@ -32,21 +32,21 @@ async function getGame(gameId) {
     }
 }
 
-async function updateGame(gameId, game) {
+async function updateGame(gameId, game, playersChanged) {
     if (useRealDatabase) {
-        await databaseAdapter.updateGame(gameId, game);
+        await databaseAdapter.updateGame(gameId, game, playersChanged);
     }
     else {
-        inMemoryDatabase.updateGame(gameId, game);
+        inMemoryDatabase.updateGame(gameId, game, playersChanged);
     }
 }
 
-async function deleteGame(gameId) {
+async function deleteGame(game) {
     if (useRealDatabase) {
-        await databaseAdapter.deleteGame(gameId);
+        await databaseAdapter.deleteGame(game);
     }
     else {
-        inMemoryDatabase.deleteGame(gameId);
+        inMemoryDatabase.deleteGame(game);
     }
 }
 
