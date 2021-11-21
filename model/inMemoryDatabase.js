@@ -33,7 +33,7 @@ function getGame(gameId) {
     return null;
 }
 
-function updateGame(gameId, game) {
+function updateGame(gameId, game, playersChanged) {
     if (ongoingGames.has(gameId)) {
         ongoingGames.set(gameId, game);
     }

@@ -32,12 +32,12 @@ async function getGame(gameId) {
     }
 }
 
-async function updateGame(gameId, game) {
+async function updateGame(gameId, game, playersChanged) {
     if (useRealDatabase) {
-        await databaseAdapter.updateGame(gameId, game);
+        await databaseAdapter.updateGame(gameId, game, playersChanged);
     }
     else {
-        inMemoryDatabase.updateGame(gameId, game);
+        inMemoryDatabase.updateGame(gameId, game, playersChanged);
     }
 }
 

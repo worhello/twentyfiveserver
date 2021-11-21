@@ -158,10 +158,12 @@ async function getGame(gameId) {
     return null;
 }
 
-async function updateGame(gameId, game) {
+async function updateGame(gameId, game, playersChanged) {
     console.log("DatabaseAdapter: Update game, gameId= " + gameId);
 
-    await storePlayerIds(game);
+    if (playersChanged) {
+        await storePlayerIds(game);
+    }
 
     var params = {
         TableName: gamesTableName,

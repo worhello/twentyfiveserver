@@ -4,17 +4,17 @@ const tf = require('twentyfive');
 const gameModel = require('../model/gameModel');
 const notificationHelper = require('./notificationHelper');
 
-async function updateGameInModel(game) {
-    await gameModel.updateGame(game.id, game);
+async function updateGameInModel(game, playersChanged) {
+    await gameModel.updateGame(game.id, game, playersChanged);
 }
 
-function updateGameState(game) {
+function updateGameState(game, playersChanged) {
     tf.GameStateMachine.updateToNextGameState(game);
-    handleUpdatedGameState(game);
+    handleUpdatedGameState(game, playersChanged);
 }
 
-function handleUpdatedGameState(game) {
-    updateGameInModel(game).then(() => handleUpdateGameStateAfterPersistence(game));
+function handleUpdatedGameState(game, playersChanged) {
+    updateGameInModel(game, playersChanged).then(() => handleUpdateGameStateAfterPersistence(game));
 }
 
 function handleUpdateGameStateAfterPersistence(game) {
@@ -126,17 +126,17 @@ function initGame(game) {
 
 function addPlayer(game, player) {
     tf.GameStateMachine.addPlayer(game, player);
-    updateGameState(game);
+    updateGameState(game, true);
 }
 
 function removePlayer(game, playerId) {
     tf.GameStateMachine.removePlayer(game, playerId);
-    updateGameState(game);
+    updateGameState(game, true);
 }
 
 function fillWithAis(game) {
     tf.GameStateMachine.fillWithAIs(game);
-    updateGameState(game);
+    updateGameState(game, true);
 }
 
 function startGame(game) {
