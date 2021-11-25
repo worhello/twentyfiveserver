@@ -10,12 +10,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "assert": "latest",
+    "aws-sdk": "latest",
     "express": "^4.17.1",
+    "mocha": "latest",
     "twentyfive": "latest",
     "uuid": "^8.3.2",
-    "ws": "^7.5.5",
-    "assert": "latest",
-    "mocha": "latest",
-    "aws-sdk": "latest"
+    "ws": "^7.5.6"
   }
 }
