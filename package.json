@@ -12,7 +12,7 @@
   "dependencies": {
     "assert": "latest",
     "aws-sdk": "latest",
-    "express": "^4.17.1",
+    "express": "^4.17.2",
     "mocha": "latest",
     "twentyfive": "latest",
     "uuid": "^8.3.2",
