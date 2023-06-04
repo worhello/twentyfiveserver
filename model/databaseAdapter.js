@@ -1,15 +1,18 @@
 "use strict";
 
-var AWS = require("aws-sdk");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 
-AWS.config.update({
+// Bare-bones DynamoDB Client
+const client = new DynamoDBClient({
     region: "eu-west-1",
     endpoint: "https://dynamodb.eu-west-1.amazonaws.com"
 });
 
-var dynamodb = new AWS.DynamoDB();
-var docClient = new AWS.DynamoDB.DocumentClient();
+// Bare-bones document client
+const docClient = DynamoDBDocumentClient.from(client); // client is DynamoDB client
 
+// Constant Strings
 const gamesTableName = "Games";
 const playersToGamesTableName = "PlayersToGames";
 const gameIdColumn = "gameId";
@@ -19,20 +22,20 @@ const playerIdColumn = "playerId";
 // Here as a record of the table creation
 function createGamesTable() {
     var params = {
-        TableName : gamesTableName,
+        TableName: gamesTableName,
         KeySchema: [
-            { AttributeName: gameIdColumn, KeyType: "HASH"}
+            { AttributeName: gameIdColumn, KeyType: "HASH" }
         ],
         AttributeDefinitions: [
             { AttributeName: gameIdColumn, AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 10, 
+            ReadCapacityUnits: 10,
             WriteCapacityUnits: 10
         }
     };
-    
-    dynamodb.createTable(params, function(err, data) {
+
+    dynamodb.createTable(params, function (err, data) {
         if (err) {
             console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
         } else {
@@ -43,20 +46,20 @@ function createGamesTable() {
 
 function createPlayersToGamesTable() {
     var params = {
-        TableName : playersToGamesTableName,
+        TableName: playersToGamesTableName,
         KeySchema: [
-            { AttributeName: playerIdColumn, KeyType: "HASH"}
+            { AttributeName: playerIdColumn, KeyType: "HASH" }
         ],
         AttributeDefinitions: [
             { AttributeName: playerIdColumn, AttributeType: "S" }
         ],
         ProvisionedThroughput: {
-            ReadCapacityUnits: 10, 
+            ReadCapacityUnits: 10,
             WriteCapacityUnits: 10
         }
     };
-    
-    dynamodb.createTable(params, function(err, data) {
+
+    dynamodb.createTable(params, function (err, data) {
         if (err) {
             console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
         } else {
@@ -85,7 +88,7 @@ async function storePlayerId(playerId, gameId) {
     console.log("Storing playerId: " + playerId + ", gameId: " + gameId);
     var params = {
         TableName: playersToGamesTableName,
-        Item:{
+        Item: {
             "playerId": playerId,
             "gameId": gameId
         }
@@ -102,7 +105,7 @@ async function storeNewGame(gameId, game) {
     console.log("DatabaseAdapter: store new game, id=", gameId);
     var params = {
         TableName: gamesTableName,
-        Item:{
+        Item: {
             "gameId": gameId,
             "game": JSON.stringify(game)
         }
@@ -124,7 +127,7 @@ async function findGameWithPlayerId(playerId) {
 async function getGameIdForPlayerId(playerId) {
     var params = {
         TableName: playersToGamesTableName,
-        Key:{
+        Key: {
             "playerId": playerId
         }
     };
@@ -136,13 +139,18 @@ async function getGameIdForPlayerId(playerId) {
     } catch (err) {
         console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
     }
+    return null;
 }
 
 async function getGame(gameId) {
+    if (gameId == null) {
+        return null;
+    }
+
     console.log("DatabaseAdapter: Get game, id=", gameId);
     var params = {
         TableName: gamesTableName,
-        Key:{
+        Key: {
             "gameId": gameId
         }
     };
@@ -167,14 +175,14 @@ async function updateGame(gameId, game, playersChanged) {
 
     var params = {
         TableName: gamesTableName,
-        Key:{
+        Key: {
             "gameId": gameId
         },
         UpdateExpression: "set game=:g",
-        ExpressionAttributeValues:{
+        ExpressionAttributeValues: {
             ":g": JSON.stringify(game)
         },
-        ReturnValues:"UPDATED_NEW"
+        ReturnValues: "UPDATED_NEW"
     };
 
     try {
@@ -187,7 +195,7 @@ async function updateGame(gameId, game, playersChanged) {
 async function deletePlayerId(playerId) {
     var params = {
         TableName: playersToGamesTableName,
-        Key:{
+        Key: {
             "playerId": playerId
         }
     };
@@ -213,7 +221,7 @@ async function deleteGame(game) {
 
     var params = {
         TableName: gamesTableName,
-        Key:{
+        Key: {
             "gameId": game.id
         }
     };
@@ -223,6 +231,12 @@ async function deleteGame(game) {
     } catch (err) {
         console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
     }
+}
+
+// TODO wire up
+async function cleanupConnections() {
+    docClient.destroy();
+    client.destroy();
 }
 
 (function () {

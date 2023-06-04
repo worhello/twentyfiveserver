@@ -7,11 +7,16 @@
     "test": "mocha test/*.js",
     "start": "node server.js"
   },
-  "author": "",
+  "author": "worhello",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/worhello/twentyfiveserver.git"
+  },
   "dependencies": {
     "assert": "latest",
-    "aws-sdk": "latest",
+    "@aws-sdk/client-dynamodb": "latest",
+    "@aws-sdk/lib-dynamodb": "latest",
     "express": "^4.18.2",
     "mocha": "latest",
     "twentyfive": "^1.0.6",
