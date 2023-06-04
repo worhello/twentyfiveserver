@@ -3,7 +3,11 @@
 const databaseAdapter = require('./databaseAdapter');
 const inMemoryDatabase = require('./inMemoryDatabase');
 
-const useRealDatabase = true;
+const useRealDatabase = false; // Disabled until properly investigated
+
+if (useRealDatabase) {
+    await databaseAdapter.initConnection();
+}
 
 async function storeNewGame(gameId, game) {
     if (useRealDatabase) {
