@@ -9,45 +9,50 @@ async function storeNewGame(gameId, game) {
     if (useRealDatabase) {
         await databaseAdapter.storeNewGame(gameId, game);
     }
-    else {
-        inMemoryDatabase.storeNewGame(gameId, game);
-    }
+
+    inMemoryDatabase.storeNewGame(gameId, game);
 }
 
 async function findGameWithPlayerId(playerId) {
+    var result = null;
     if (useRealDatabase) {
-        return await databaseAdapter.findGameWithPlayerId(playerId);
+        result = await databaseAdapter.findGameWithPlayerId(playerId);
     }
-    else {
-        return inMemoryDatabase.findGameWithPlayerId(playerId);
+
+    if (result != null) {
+        return result;
     }
+
+    return inMemoryDatabase.findGameWithPlayerId(playerId);
 }
 
 async function getGame(gameId) {
+    var result = null;
     if (useRealDatabase) {
-        return await databaseAdapter.getGame(gameId);
+        result = await databaseAdapter.getGame(gameId);
     }
-    else {
-        return inMemoryDatabase.getGame(gameId);
+
+    if (result != null) {
+        return result;
     }
+
+    return inMemoryDatabase.getGame(gameId);
 }
 
 async function updateGame(gameId, game, playersChanged) {
     if (useRealDatabase) {
         await databaseAdapter.updateGame(gameId, game, playersChanged);
     }
-    else {
-        inMemoryDatabase.updateGame(gameId, game, playersChanged);
-    }
+
+    inMemoryDatabase.updateGame(gameId, game, playersChanged);
 }
 
 async function deleteGame(game) {
     if (useRealDatabase) {
         await databaseAdapter.deleteGame(game);
     }
-    else {
-        inMemoryDatabase.deleteGame(game);
-    }
+
+    inMemoryDatabase.deleteGame(game);
 }
 
 (function () {
