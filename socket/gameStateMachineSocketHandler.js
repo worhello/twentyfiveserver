@@ -9,6 +9,14 @@ function getWsForUser(userId) {
     return connections.get(userId);
 }
 
+function sendHeartbeatAck(json, callback) {
+    console.log("sending heartbeat ack for userId " + json.userId);
+    var ack = {};
+    ack.type = "heartbeatAck";
+    ack.userId = json.userId;
+    callback(ack);
+}
+
 function handleWebsocketMessage(ws, message) {
     // console.log('received: %s', message);
     let sendJsonResponseToCaller = function(result) {
@@ -18,7 +26,10 @@ function handleWebsocketMessage(ws, message) {
 
     // TODO validate
     let json = JSON.parse(message);
-    if (json.type === "createGame") {
+    if (json.type === "heartbeat") {
+        sendHeartbeatAck(json, sendJsonResponseToCaller);
+    }
+    else if (json.type === "createGame") {
         GamesManager.createGame(json, sendJsonResponseToCaller);
     }
     else if (json.type === "joinGame") {
