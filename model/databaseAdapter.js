@@ -3,14 +3,8 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 
-// Bare-bones DynamoDB Client
-const client = new DynamoDBClient({
-    region: "eu-west-1",
-    endpoint: "https://dynamodb.eu-west-1.amazonaws.com"
-});
-
-// Bare-bones document client
-const docClient = DynamoDBDocumentClient.from(client); // client is DynamoDB client
+const client = null;
+const docClient = null;
 
 // Constant Strings
 const gamesTableName = "Games";
@@ -70,6 +64,14 @@ function createPlayersToGamesTable() {
 
 
 async function initConnection() {
+    // Bare-bones DynamoDB Client
+    client = new DynamoDBClient({
+        region: "eu-west-1",
+        endpoint: "https://dynamodb.eu-west-1.amazonaws.com"
+    });
+
+    // Bare-bones document client
+    docClient = DynamoDBDocumentClient.from(client); // client is DynamoDB client
 }
 
 async function storePlayerIds(game) {
