@@ -1,6 +1,6 @@
 {
   "name": "twentyfiveserver",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -14,13 +14,13 @@
     "url": "git+https://github.com/worhello/twentyfiveserver.git"
   },
   "dependencies": {
-    "assert": "latest",
-    "@aws-sdk/client-dynamodb": "latest",
-    "@aws-sdk/lib-dynamodb": "latest",
-    "express": "^4.18.2",
+    "@aws-sdk/client-dynamodb": "^3.454.0",
+    "@aws-sdk/lib-dynamodb": "^3.454.0",
+    "assert": "^2.1.0",
+    "express": "latest",
     "mocha": "latest",
-    "twentyfive": "^1.0.6",
-    "uuid": "^8.3.2",
-    "ws": "^7.5.9"
+    "twentyfive": "1.0.7",
+    "uuid": "latest",
+    "ws": "latest"
   }
 }
